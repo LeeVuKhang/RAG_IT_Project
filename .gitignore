@@ -1,0 +1,7 @@
+venv312/
+*.csv
+*.json
+*.faiss
+*.zip
+__pycache__/
+*.pyc
