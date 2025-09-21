@@ -3,7 +3,7 @@ import glob
 import pandas as pd
 
 all_chunks = []
-for file in glob.glob("dulichvn_sitemap4.json"):
+for file in glob.glob("dulichvn_sitemap.json"):
     with open(file, "r", encoding="utf-8") as f:
         data = json.load(f)
 
