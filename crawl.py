@@ -1,82 +1,135 @@
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
 import json
-import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
-BASE_URL = "https://dulichvietnam.com.vn/cam-nang-trong-nuoc.html"
-DOMAIN = "https://dulichvietnam.com.vn"
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                  "AppleWebKit/537.36 (KHTML, like Gecko) "
-                  "Chrome/116.0.0.0 Safari/537.36"
-}
 
-SKIP_TITLES = {"Trang chủ", "Việt Nam"}
+def recursive_split(text, max_words=500):
+    """Chia nhỏ text dài thành nhiều đoạn nhỏ (Level 2)"""
+    words = text.split()
+    if len(words) <= max_words:
+        return [text]
 
-def get_page(url):
-    resp = requests.get(url, headers=HEADERS)
-    resp.raise_for_status()
-    return resp.text
+    chunks = []
+    start = 0
+    while start < len(words):
+        end = min(start + max_words, len(words))
+        chunk = " ".join(words[start:end])
+        chunks.append(chunk)
+        start = end
+    return chunks
 
-def parse_list_page(html):
-    soup = BeautifulSoup(html, "html.parser")
-    articles = []
-    for a in soup.select(".vnt-main a[href]"):
-        href = a["href"].strip()
-        title = a.get_text(strip=True)
 
-        if not title or title in SKIP_TITLES:
-            continue
-        if href.startswith("#") or "javascript" in href.lower():
-            continue
-        if "page=" in href.lower():
-            continue
-        if href.startswith("/cam-nang-trong-nuoc"):
-            continue
+def crawl_article(url):
+    """Crawl nội dung 1 bài viết và chia theo cấu trúc heading (Level 3 + fallback Level 2)"""
+    try:
+        res = requests.get(url, timeout=10)
+        res.encoding = "utf-8"
+        soup = BeautifulSoup(res.text, "html.parser")
 
-        # Chỉ lấy link bài viết thật
-        if href.startswith("/"):
-            full_url = urljoin(DOMAIN, href)
-            articles.append({"url": full_url, "title": title})
-    return articles
+        title = soup.select_one("h1.entry-title")
+        content_div = soup.select_one("div.entry-content")
 
-def parse_detail_page(url, title):
-    html = get_page(url)
-    soup = BeautifulSoup(html, "html.parser")
-    sections = []
-    main_div = soup.select_one(".vnt-main")
-    if not main_div:
-        return {"url": url, "title": title, "sections": []}
+        if not title or not content_div:
+            print(f"⚠️ Bỏ qua (không có nội dung bài viết): {url}")
+            return []
 
-    current_header = ""
-    for tag in main_div.find_all(["h1", "h2", "h3", "p"], recursive=True):
-        if tag.name in ["h1", "h2", "h3"]:
-            current_header = tag.get_text(strip=True)
-        elif tag.name == "p":
-            content = tag.get_text(strip=True)
-            if content:
-                sections.append({"header": current_header, "content": content})
-    return {"url": url, "title": title, "sections": sections}
+        chunks = []
+        current_h2 = None
+        current_h3 = None
+        buffer = []
 
-def crawl_all_pages(max_pages=8):
-    all_data = []
-    for page_num in range(1, max_pages + 1):
-        page_url = BASE_URL if page_num == 1 else f"{BASE_URL}?page={page_num}"
-        print(f"Đang lấy: {page_url}")
-        html = get_page(page_url)
-        articles = parse_list_page(html)
-        if not articles:
-            break
-        for art in articles:
-            print(f"  -> Lấy bài: {art['title']}")
-            detail = parse_detail_page(art["url"], art["title"])
-            all_data.append(detail)
-            time.sleep(1)  
-    return all_data
+        def flush_buffer():
+            """Lưu nội dung buffer thành chunk (có fallback Level 2)"""
+            nonlocal buffer, current_h2, current_h3
+            if buffer:
+                header = current_h3 if current_h3 else current_h2
+                content_text = "\n".join(buffer).strip()
+                if content_text:
+                    # Nếu quá dài thì fallback sang recursive split
+                    if len(content_text.split()) > 1000:
+                        split_contents = recursive_split(content_text, max_words=500)
+                        for idx, sub_content in enumerate(split_contents, start=1):
+                            chunks.append({
+                                "url": url,
+                                "title": title.get_text(" ", strip=True),
+                                "header": f"{header} (phần {idx})" if header else None,
+                                "chunk": f"{title.get_text(' ', strip=True)}\n{header} (phần {idx})\n{sub_content}"
+                            })
+                    else:
+                        chunks.append({
+                            "url": url,
+                            "title": title.get_text(" ", strip=True),
+                            "header": header,
+                            "chunk": f"{title.get_text(' ', strip=True)}\n{header}\n{content_text}"
+                        })
+                buffer = []
+
+        for el in content_div.find_all(["h2", "h3", "p"]):
+            if el.name == "h2":
+                flush_buffer()
+                current_h2 = el.get_text(" ", strip=True)
+                current_h3 = None
+            elif el.name == "h3":
+                flush_buffer()
+                current_h3 = el.get_text(" ", strip=True)
+            elif el.name == "p":
+                text = el.get_text(" ", strip=True)
+                if text:
+                    buffer.append(text)
+
+        flush_buffer()  # xử lý đoạn cuối
+
+        print(f"✅ Đã crawl & split (Level 3 + fallback 2): {url} ({len(chunks)} chunks)")
+        return chunks
+
+    except Exception as e:
+        print(f"❌ Lỗi khi crawl {url}: {e}")
+        return []
+
+
+def get_post_links(sitemap_url):
+    """Lấy tất cả link bài viết từ 1 sitemap"""
+    try:
+        resp = requests.get(sitemap_url, timeout=10)
+        resp.encoding = "utf-8"
+        soup = BeautifulSoup(resp.content, "xml")
+        all_links = [loc.text for loc in soup.find_all("loc")]
+        post_links = [link for link in all_links if "/wp-content/" not in link]
+        print(f"🔎 {sitemap_url}: lấy {len(post_links)} link")
+        return post_links
+    except Exception as e:
+        print(f"❌ Lỗi khi lấy link từ {sitemap_url}: {e}")
+        return []
+
+
+def main():
+    sitemap_urls = [
+        "https://dulichvn.net/post-sitemap1.xml",
+        "https://dulichvn.net/post-sitemap2.xml",
+        "https://dulichvn.net/post-sitemap3.xml",
+        "https://dulichvn.net/post-sitemap4.xml",
+    ]
+
+    all_post_links = []
+    for sm in sitemap_urls:
+        all_post_links.extend(get_post_links(sm))
+
+    print(f"📌 Tổng cộng {len(all_post_links)} link bài viết cần crawl")
+
+    all_chunks = []
+    with ThreadPoolExecutor(max_workers=15) as executor:
+        futures = {executor.submit(crawl_article, url): url for url in all_post_links}
+        for future in as_completed(futures):
+            result = future.result()
+            if result:
+                all_chunks.extend(result)
+
+    with open("dulichvn_chunks.json", "w", encoding="utf-8") as f:
+        json.dump(all_chunks, f, ensure_ascii=False, indent=2)
+
+    print(f"📂 Crawl + split (Level 3 + fallback 2) xong, tổng cộng {len(all_chunks)} chunks đã lưu!")
+
 
 if __name__ == "__main__":
-    data = crawl_all_pages()
-    with open("dulichvn_sitemap1.json", "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-    print(f"Đã lưu {len(data)} bài vào dulichvn_sitemap1.json")
+    main()

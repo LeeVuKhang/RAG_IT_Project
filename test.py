@@ -29,7 +29,7 @@ def search(query, top_k=10):
             })
     return results
 
-query = "homestay sóc trăng"
+query = "Phú Quốc"
 results = search(query, top_k=10)
 
 for i, r in enumerate(results, 1):
