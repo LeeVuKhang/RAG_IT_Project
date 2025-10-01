@@ -10,25 +10,29 @@ class Chunker:
     def make_chunks(data: list) -> list:
         chunks = []
         splitter = RecursiveCharacterTextSplitter(
-            chunk_size=300,
+            chunk_size=400,
             chunk_overlap=0,
             separators=["\n\n", "\n", ".", " ", ""]
         )
 
         for i, item in enumerate(data):
             content = item.get("content", "").strip()
+            header = item.get("header", "").strip()
+
             if not content or len(content) < 20:
                 continue
 
             split_chunks = splitter.split_text(content)
 
             for j, chunk in enumerate(split_chunks):
+                final_chunk = f"{header}\n{chunk}" if header else chunk
+
                 chunk_meta = {
                     "id": f"chunk_{i}_{j}",
                     "title": item.get("title"),
-                    "header": item.get("header"),
-                    "chunk": chunk,
-                    "hash": Chunker._sha1(chunk)
+                    "header": header,
+                    "chunk": final_chunk,
+                    "hash": Chunker._sha1(final_chunk)
                 }
                 chunks.append(chunk_meta)
 

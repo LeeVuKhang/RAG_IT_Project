@@ -69,15 +69,15 @@ class Retriever:
 
 # --- Test ---
 if __name__ == "__main__":
-    retriever = FaissRetriever(
+    retriever = Retriever(
         faiss_path="embeddings.faiss",
         metadata_path="metadata.json",
         embed_model="AITeamVN/Vietnamese_Embedding",
         use_rerank=True
     )
 
-    query = "homestay Ninh Bình"
-    results = retriever.search(query, top_k=5)
+    query = "du lịch Nam Định"
+    results = retriever.search(query, top_k=10)
 
     for i, r in enumerate(results, 1):
         print(f"{i}. [{r['title']}]")
