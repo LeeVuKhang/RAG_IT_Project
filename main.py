@@ -83,3 +83,4 @@ if __name__ == "__main__":
     Embedder.save_metadata(filtered_data, metadata_file="metadata.json")
 
     print("pipeline: Crawl → Chunking → Deduplication → Embedding | Done!!!!")
+
