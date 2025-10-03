@@ -10,31 +10,31 @@ if __name__ == "__main__":
     # { -------------------- 1. Crawl -------------------- }
     # Crawl bài viết từ sitemap, tách chunk theo cấu trúc heading
     # ==========================================================
-    sitemap_urls = [
-        "https://dulichvn.net/post-sitemap1.xml",
-        "https://dulichvn.net/post-sitemap2.xml",
-        "https://dulichvn.net/post-sitemap3.xml",
-        "https://dulichvn.net/post-sitemap4.xml",
-    ]
+    # sitemap_urls = [
+    #     "https://dulichvn.net/post-sitemap1.xml",
+    #     "https://dulichvn.net/post-sitemap2.xml",
+    #     "https://dulichvn.net/post-sitemap3.xml",
+    #     "https://dulichvn.net/post-sitemap4.xml",
+    # ]
 
-    all_post_links = []
-    for sm in sitemap_urls:
-        all_post_links.extend(WebCrawler.get_post_links(sm))
+    # all_post_links = []
+    # for sm in sitemap_urls:
+    #     all_post_links.extend(WebCrawler.get_post_links(sm))
 
-    print(f" Tổng cộng {len(all_post_links)} link bài viết cần crawl")
+    # print(f" Tổng cộng {len(all_post_links)} link bài viết cần crawl")
 
-    all_docs = []
-    with ThreadPoolExecutor(max_workers=15) as executor:
-        futures = {executor.submit(WebCrawler.crawl_article, url): url for url in all_post_links}
-        for future in as_completed(futures):
-            result = future.result()
-            if result:
-                all_docs.extend(result)
+    # all_docs = []
+    # with ThreadPoolExecutor(max_workers=15) as executor:
+    #     futures = {executor.submit(WebCrawler.crawl_article, url): url for url in all_post_links}
+    #     for future in as_completed(futures):
+    #         result = future.result()
+    #         if result:
+    #             all_docs.extend(result)
 
-    with open("raw_crawl.json", "w", encoding="utf-8") as f:
-        json.dump(all_docs, f, ensure_ascii=False, indent=2)
+    # with open("raw_crawl.json", "w", encoding="utf-8") as f:
+    #     json.dump(all_docs, f, ensure_ascii=False, indent=2)
 
-    print(f"Crawl xong, tổng cộng {len(all_docs)} chunks đã lưu!")
+    # print(f"Crawl xong, tổng cộng {len(all_docs)} chunks đã lưu!")
 
     # ==========================================================
     # { -------------------- 2. Chunking -------------------- }

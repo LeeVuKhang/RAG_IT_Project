@@ -76,8 +76,8 @@ if __name__ == "__main__":
         use_rerank=True
     )
 
-    query = "du lịch Phú Quốc"
-    results = retriever.search(query, top_k=10)
+    query = "Du lịch Nam Du"
+    results = retriever.search(query, top_k=5)
 
     for i, r in enumerate(results, 1):
         print(f"{i}. [{r['title']}]")

@@ -10,8 +10,8 @@ class Chunker:
     def make_chunks(data: list) -> list:
         chunks = []
         splitter = RecursiveCharacterTextSplitter(
-            chunk_size=450,
-            chunk_overlap=50,
+            chunk_size=600,
+            chunk_overlap=200,
             separators=["\n\n", "\n", ".", " ", ""]
         )
 
@@ -27,7 +27,7 @@ class Chunker:
             for j, chunk in enumerate(split_chunks):
                 if len(chunk.split()) < 20:
                     continue
-                final_chunk = f"{header}\n{chunk}" if header else chunk
+                final_chunk = f"\n{chunk}" 
 
                 chunk_meta = {
                     "id": f"chunk_{i}_{j}",
