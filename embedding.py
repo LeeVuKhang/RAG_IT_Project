@@ -60,7 +60,7 @@ class Embedder:
     def build_faiss_index(embeddings, faiss_file="embeddings.faiss"):
         """Tạo FAISS index và lưu ra file"""
         dim = embeddings.shape[1]
-        index = faiss.IndexFlatL2(dim)
+        index = faiss.IndexFlatIP(dim)
         index.add(np.array(embeddings, dtype="float32"))
         faiss.write_index(index, faiss_file)
         print(f"💾 Đã lưu FAISS index vào: {faiss_file}")

@@ -41,26 +41,26 @@ class Retriever:
 
     def search(self, query: str, top_k: int = 10):
         """
-        Tìm kiếm top_k kết quả gần nhất trong FAISS index + rerank nếu bật
+        Tìm kiếm top_k kết quả gần nhất trong FAISS index + rerank
         """
         query_vec = self.embed_query(query)
-        distances, indices = self.index.search(query_vec, top_k)
-
+        scores, indices = self.index.search(query_vec, top_k)  
+        
         results = []
-        for idx, dist in zip(indices[0], distances[0]):
+        for idx, score in zip(indices[0], scores[0]):
             meta = self.id2meta.get(idx)
             if meta:
                 results.append({
                     "id": int(idx),
-                    "score": float(dist),
+                    "score": float(score), 
                     "title": meta.get("title", ""),
                     "chunk": meta.get("chunk", "")
                 })
 
         if self.use_rerank and results:
             pairs = [[query, r["chunk"]] for r in results]
-            scores = self.reranker.predict(pairs)
-            for r, s in zip(results, scores):
+            rerank_scores = self.reranker.predict(pairs)
+            for r, s in zip(results, rerank_scores):
                 r["rerank_score"] = float(s)
             results = sorted(results, key=lambda x: x["rerank_score"], reverse=True)
 
