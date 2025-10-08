@@ -5,3 +5,4 @@ venv312/
 *.zip
 __pycache__/
 *.pyc
+*.env
