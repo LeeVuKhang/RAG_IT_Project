@@ -177,11 +177,28 @@ def run_experiment(model_name, device):
     return report
 
 if __name__ == "__main__":
-    # Create sample data
     test_data = [
-        {"id": "chunk_0", "title": "Travel Guide", "header": "Introduction", "chunk": "This is a wonderful destination with many islands to explore."},
-        {"id": "chunk_1", "title": "Travel Guide", "header": "Best Time to Visit", "chunk": "The ideal time to travel is from December to March each year."},
-        {"id": "chunk_2", "title": "Local Cuisine", "header": "Seafood", "chunk": "The locals are mainly fishermen, so the seafood is always fresh and reasonably priced."}
+        {
+            "id": "chunk_4332_0",
+            "title": "Du lịch Nam Du tự túc: Kinh nghiệm chi tiết cho chuyến phiêu lưu khám phá thiên đường biển đảo",
+            "header": "Giới thiệu về quần đảo Nam Du",
+            "chunk": "\nQuần đảo Nam Du, thuộc huyện Kiên Hải, tỉnh Kiên Giang, là một quần đảo gồm 21 hòn đảo lớn nhỏ, nổi bật với những hòn đảo chính như Hòn Lớn, Hòn Ngang, Hòn Dầu,… Nằm cách đất liền khoảng 65 hải lý, du khách cần di chuyển bằng tàu cao tốc trong khoảng 2 tiếng để đặt chân đến đảo.\nKhám phá vẻ đẹp hoang sơ và bình dị\nCảm nhận đầu tiên của du khách khi đặt chân đến Nam Du là sự bình dị, mộc mạc của cuộc sống sinh hoạt của người dân xứ đảo. Không khí trong lành, bầu trời xanh hòa cùng màu xanh của biển cả tạo nên một khung cảnh thơ mộng, khiến du khách cảm thấy thư giãn và thoải mái.",
+            "hash": "df2bab11896c7cb1aed9a9d6b53904761ea1e8fe"
+        },
+        {
+            "id": "chunk_4332_1",
+            "title": "Du lịch Nam Du tự túc: Kinh nghiệm chi tiết cho chuyến phiêu lưu khám phá thiên đường biển đảo",
+            "header": "Giới thiệu về quần đảo Nam Du",
+            "chunk": "\nThời điểm lý tưởng để khám phá Nam Du\nTheo kinh nghiệm của Du Lịch VN , thời điểm lý tưởng nhất để du lịch Nam Du là từ tháng 12 đến tháng 3, khi biển trong xanh và êm ả nhất. Lúc này, thời tiết nắng đẹp, biển lặng, rất thuận lợi cho các hoạt động vui chơi giải trí như tắm biển, lặn ngắm san hô, chèo thuyền kayak, câu cá…\nNét văn hóa đặc trưng của người dân Nam Du",
+            "hash": "67b798e574b922840c8b0997fca2e790f9bd73af"
+        },
+        {
+            "id": "chunk_4332_2",
+            "title": "Du lịch Nam Du tự túc: Kinh nghiệm chi tiết cho chuyến phiêu lưu khám phá thiên đường biển đảo",
+            "header": "Giới thiệu về quần đảo Nam Du",
+            "chunk": "\nNét văn hóa đặc trưng của người dân Nam Du\nNgười dân Nam Du hiền hòa, thân thiện và mến khách. Cuộc sống của họ gắn liền với biển cả, nên họ rất am hiểu về biển, về cá, về những món ăn ngon từ hải sản. Khi đến Nam Du, du khách sẽ được trải nghiệm nét văn hóa đặc trưng của người dân địa phương, được thưởng thức những món ăn ngon được chế biến từ hải sản tươi sống, được tham gia các hoạt động truyền thống như câu cá, đánh lưới…",
+            "hash": "11bc44cc9ac867547fb9e54880b2ba0a4d4d90e3"
+        },
     ]
     with open(INPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(test_data, f, ensure_ascii=False, indent=4)
