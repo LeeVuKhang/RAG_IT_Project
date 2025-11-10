@@ -10,8 +10,8 @@ class Chunker:
     def make_chunks(data: list) -> list:
         chunks = []
         splitter = RecursiveCharacterTextSplitter(
-            chunk_size=600,
-            chunk_overlap=200,
+            chunk_size=350,
+            chunk_overlap=0,     # No overlap between chunks
             separators=["\n\n", "\n", ".", " ", ""]
         )
 
